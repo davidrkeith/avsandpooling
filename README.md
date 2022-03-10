@@ -1,2 +1,7 @@
-# avsandpooling
-Unintended Consequences of Automated Vehicles and Pooling for Urban Transportation Systems
+# Unintended Consequences of Automated Vehicles and Pooling for Urban Transportation Systems
+## Authors: Sergey Naumov, David Keith, and Charles Fine
+## Year: 2020
+## Journal: Production and Operations Management
+## DOI: https://doi.org/10.1111/poms.13166
+## Abstract:
+Automated vehicles (AVs) have emerged rapidly in recent years, becoming a focus of high expectations and heated debates. Advocates argue that the arrival of AVs will make driving safer, greener, cheaper, and faster, bringing ubiquitous access to transportation while significantly reducing traffic congestion and environmental impacts. Skeptics, in contrast, suggest that the appeal of AVs will induce additional driving, offsetting or even overwhelming the positive effects of increased automation. Many analysts now believe that the solution lies in ensuring that most vehicle trips are shared to serve the same number of passenger miles with fewer vehicle miles, reducing traffic congestion. However, these analyses fail to recognize that reducing congestion will induce yet more demand for driving, and attract riders from other transportation modes including public transit, which is already experiencing falling ridership in many cities. In this paper, we explore the impact of AVs and pooling on consumer mode choice and the effect on the performance of both road and public transit systems. We show that the well-intentioned move to promote pooling may have the unintended consequence of triggering a public transit death spiral, leading to both worse public transit quality and more rather than less traffic congestion. We argue that the deployment of AVs and pooling can be effective at improving the sustainability and efficiency of urban transportation operations, but only when accompanied by policies that make driving less rather than more attractive. 
