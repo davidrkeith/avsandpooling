@@ -1,0 +1,975 @@
+{UTF-8}
+Ridership Revenue=
+	Commuting Population in the Catchment Area*PT Mode Share*PT Fare
+	~	$/day
+	~	Daily revenue of Public Transit generated from ridership
+	|
+
+PT Mode Share=
+	1-Driving Mode Share
+	~	dmnl
+	~	Mode share of Public Transit
+	|
+
+PT Quality= INTEG (
+	PT Maintenance-PT Quality Erosion,
+		Desired PT Quality*Reference PT Quality)
+	~	dmnl
+	~	Total quality of Public Transit for commuters, represents important \
+		attributes, such as network of routes, frequency and reliability of \
+		service, etc.
+	|
+
+Operating Cost per Rider=
+	(Vehicle Operating Cost+VMT Tax)*(Average Vehicle Occupancy^Elasticity of Operating Cost to Occupancy\
+		)
+	~	cents/mile
+	~	Operating cost of a vehicle per rider
+	|
+
+Elasticity of Operating Cost to Occupancy=
+	-0.5
+	~	dmnl [-2,-0.1]
+	~	Elasticity of the operating cost of driving per rider to the average \
+		occupancy of a vehicle in the fleet
+	|
+
+Effect of Occupancy on VMT=
+	Average Vehicle Occupancy^Elasticity of VMT to Occupancy
+	~	dmnl
+	~	Effect of the average occupancy of vehicles on the number of miles driven
+	|
+
+Elasticity of VMT to Occupancy=
+	-0.7
+	~	dmnl [-2,-0.1]
+	~	Elasticity of the number of miles driven by a vehicle to the average \
+		occupancy of the vehicle, reflects the overhead associated with picking up \
+		and dropping off of all passengers
+	|
+
+Total Vehicle Miles Traveled=
+	Total Driving Demand*Effect of Occupancy on VMT
+	~	mile/day
+	~	Total vehicle miles traveled by all vehicles in the area per day
+	|
+
+Equilibrium Utility of Driving= INITIAL(
+	Equilibrium Perceived Travel Time*Reference Value Of Driving Time*Relative Weight of Time Costs\
+		 + Vehicle Operating Cost*Relative Weight of Operating Cost per Rider)
+	~	dmnl
+	~	Utility of driving for commuters to maintain dynamic equilibrium in the \
+		beginning of the simulation
+	|
+
+Reinvestment Fraction of VMT Tax=
+	0.01
+	~	dmnl
+	~	Fraction of the revenue collected from VMT tax for the reinvestment in \
+		Public Transit quality
+	|
+
+Utility of Driving=
+	Average Driving Time*Value of Driving Time*Relative Weight of Time Costs + Operating Cost per Rider\
+		*Relative Weight of Operating Cost per Rider
+	~	dmnl
+	~	Total utility of driving for commuters
+	|
+
+Investment in PT=
+	MIN(Max Revenue Reinvestment, Desired Investment in PT) + Government Subsidy + VMT Tax Reinvestment
+	~	$/year
+	~	Actual available and allocated investment in Public Transit quality
+	|
+
+Full VMT Tax=
+	20
+	~	cents/mile
+	~	Maximum level of the VMT tax (road pricing)
+	|
+
+Cents in $=
+	100
+	~	cents/$
+	~	Amount of cents in a dollar
+	|
+
+VMT Tax=
+	IF THEN ELSE
+	  (SW VMT Tax = 1,
+	   RAMP( Full VMT Tax / (Full Effects Year - Effects Start Year), Effects Start Year\
+		, Full Effects Year),
+	   0
+	  )
+	~	cents/mile
+	~	Piecewise linear function representing actual level of VMT tax
+	|
+
+Vehicle Operating Cost=
+	100
+	~	cents/mile
+	~	Operating cost of a vehicle per rider in the beginning of the simulation
+	|
+
+VMT Tax Reinvestment=
+	Total Vehicle Miles Traveled*VMT Tax*Reinvestment Fraction of VMT Tax*Days in Year/Cents in $
+	~	$/year
+	~	Actual reinvestment in Public Transit quality from VMT tax
+	|
+
+Relative Weight of Operating Cost per Rider=
+	-0.005
+	~	dmnl/(cents/mile)
+	~	Weight of the operating cost in the utility of driving
+	|
+
+SW VMT Tax=
+	0
+	~	dmnl [0,1,1]
+	~	0 = No VMT Tax, 1 = VMT Tax
+	|
+
+Effects Start Year=
+	5
+	~	year [0,30,1]
+	~	The start year of the effects of ride-sharing, vehicle automation, and \
+		road pricing
+	|
+
+Effect of Automation on the Value of Driving Time=
+	IF THEN ELSE
+	  (SW AVs = 1,
+	   1 + RAMP( -(1-Maximum Effect of Automation on the Value of Time) / (Full Effects Year\
+		 - Effects Start Year), Effects Start Year, Full Effects Year),
+	   1
+	  )
+	~	dmnl
+	~	Piecewise linear function representing actual level of the effect of \
+		vehicle automation
+	|
+
+Full Effects Year=
+	10
+	~	year [1,10,1]
+	~	The year when the full effects of ride-sharing, vehicle automation, and \
+		road pricing
+	|
+
+Elasticity of Driving Demand to Automation=
+	-0.35
+	~	dmnl [-2,-0.1]
+	~	Elasticity of the driving demand to the average level of automation \
+		offered by the fleet of vehicles in the area
+	|
+
+Driving Demand per Person=
+	Reference Driving Demand per Person*(Effect of Automation on the Value of Driving Time\
+		^Elasticity of Driving Demand to Automation)
+	~	miles/person/day
+	~	Average driving demand in the area, as measured per person
+	|
+
+Total Driving Demand=
+	Commuting Population in the Catchment Area*Driving Demand per Person*Driving Mode Share
+	~	mile/day
+	~	Total driving demand in the area per day
+	|
+
+Reference Driving Demand per Person=
+	20
+	~	miles/person/day
+	~	Average driving demand in the area calculated per person in the beginning \
+		of the simulation
+	|
+
+Equilibrium Driving Demand= INITIAL(
+	Commuting Population in the Catchment Area*Reference Driving Demand per Person*(1-Equilibrium Mode Share of PT\
+		))
+	~	mile/day
+	~	Total driving demand in the area to maintain dynamic equilibrium in the \
+		beginning of the simulation
+	|
+
+Effect of Pooling on Average Vehicle Occupancy=
+	IF THEN ELSE
+	  (SW Pooling = 1,
+	   1 + RAMP( (Maximum Effect of Pooling on Average Vehicle Occupancy-1) / (Full Effects Year\
+		 - Effects Start Year), Effects Start Year, Full Effects Year),
+	   1
+	  )
+	~	dmnl
+	~	Piecewise linear function representing actual level of the effect of \
+		ride-sharing
+	|
+
+Equilibrium Reference VMT= INITIAL(
+	Equilibrium Driving VMT / (((Reference Driving Demand per Person/Equilibrium Perceived Travel Time\
+		) / Free Flow Speed of Traffic
+	)^(1/Elasticity of Traffic Speed to Traffic)))
+	~	miles/day
+	~	Total reference number of miles driven by all vehicles in the area to \
+		maintain dynamic equilibrium in the beginning of the simulation
+	|
+
+Average Vehicle Occupancy=
+	Reference Vehicle Occupancy * Effect of Pooling on Average Vehicle Occupancy
+	~	dmnl
+	~	Average occupancy of a vehicle in the area
+	|
+
+Equilibrium PT Fare= INITIAL(
+	(Equilibrium PT Quality Erosion Rate/Investment Eficiency-Equilibrium Authorized Government Subsidy\
+		) / Max Reinvestment Fraction
+	/ Days in Year / Commuting Population in the Catchment Area / Equilibrium Mode Share of PT\
+		)
+	~	$/(day*person)
+	~	PT fare to maintain dynamic equilibrium in the beginning of the simulation
+	|
+
+Value of Driving Time=
+	Reference Value Of Driving Time * Effect of Automation on the Value of Driving Time
+	~	$/hour
+	~	A value of one hour of drivers' time
+	|
+
+Reference Value Of Driving Time=
+	25
+	~	$/hour
+	~	Average value of driving time for a rider in the beginning of the \
+		simulation
+	|
+
+Equilibrium PT Travel Costs= INITIAL(
+	((Equilibrium PT Quality/Desired PT Quality)^Elasticity of PT Travel Costs to Quality\
+		)*Reference PT Travel Costs)
+	~	$/trip
+	~	Travel costs of PT for commuters to maintain dynamic equilibrium in the \
+		beginning of the simulation
+	|
+
+Equilibirum PT Utility Coefficient= INITIAL(
+	((Equilibrium Utility of Driving * Ride Choice Logit Scaling - LN((1-Equilibrium Mode Share of PT\
+		)/Equilibrium Mode Share of PT)) / Ride Choice Logit Scaling) / Equilibrium PT Travel Costs\
+		)
+	~	dmnl/($/trip)
+	~	Weight of the travel costs of PT for commuters to maintain dynamic \
+		equilibrium in the beginning of the simulation
+	|
+
+Equilibrium PT Quality Erosion Rate= INITIAL(
+	Equilibrium PT Quality/Average Service Life of PT Assets)
+	~	dmnl/year
+	~	PT Quality erosion to maintain dynamic equilibrium in the beginning of the \
+		simulation
+	|
+
+Reference PT Quality=
+	0.7
+	~	dmnl [0.01,1,0.01]
+	~	Initial value of the quality of Public Transit in the area
+	|
+
+Effect of Increased Driving on Speed=
+	MIN(1,Relative VMT^Elasticity of Traffic Speed to Traffic)
+	~	dmnl
+	~	Effect of the number of miles driven by vehicles in the area on the \
+		average traffic flow speed
+	|
+
+Equilibrium Perceived Travel Time=
+	1
+	~	hours/day/person
+	~	Average driving time of commuters in the area in the beginning of the \
+		simulation
+	|
+
+Equilibrium Driving VMT= INITIAL(
+	Equilibrium Driving Demand/Reference Vehicle Occupancy)
+	~	mile/day
+	~	Total number of miles driven by all vehicles in the area to maintain \
+		dynamic equilibrium in the beginning of the simulation
+	|
+
+Equilibrium PT Quality=
+	0.7
+	~	dmnl
+	~	Average PT quality in the area in the beginning of the simulation
+	|
+
+Equilibrium Authorized Government Subsidy= INITIAL(
+	Maximum Goverment Subsidy*(1-Equilibrium Relative PT Quality))
+	~	$/year
+	~	Authorized level of public subsidy to maintain dynamic equilibrium in the \
+		beginning of the simulation
+	|
+
+Reference Vehicle Occupancy=
+	1
+	~	dmnl
+	~	Average occupancy of a vehicle in the beginning of the simulation
+	|
+
+Equilibrium Relative PT Quality= INITIAL(
+	Equilibrium PT Quality/Desired PT Quality)
+	~	dmnl
+	~	Relative PT quality to maintain dynamic equilibrium in the beginning of \
+		the simulation
+	|
+
+Reference VMT= INITIAL(
+	Equilibrium Reference VMT)
+	~	miles/day
+	~	Reference vehicle miles driven by all vehicles in the area
+	|
+
+Maximum Effect of Automation on the Value of Time=
+	0.5
+	~	dmnl [0.1,2,0.025]
+	~	Maximum effect of automated vehicles on the value of driving time, \
+		reflects the average level of automation achieved by the fleet of vehicles \
+		in the area
+	|
+
+Maximum Effect of Pooling on Average Vehicle Occupancy=
+	1.5
+	~	dmnl [1,2.5,0.05]
+	~	Maximum multiplier of the average occupancy of a vehicle in the area
+	|
+
+Authorized Government Subsidy=
+	Maximum Goverment Subsidy*(1-Relative PT Quality)
+	~	$/year
+	~	Authorized public subsidy to invest in Public Transit and bring the Public \
+		Transit quality to the desired level
+	|
+
+Government Subsidy=
+	MAX(0,MIN(Authorized Government Subsidy,Desired Investment in PT-Max Revenue Reinvestment\
+		))
+	~	$/year
+	~	Actual public subsidy, compensating for the insufficient investment in \
+		Public Transit quality from ridership revenue
+	|
+
+PT Fare= INITIAL(
+	Equilibrium PT Fare)
+	~	$/(day*person)
+	~	Average trip fare for commuters
+	|
+
+Equilibrium Mode Share of PT=
+	0.3
+	~	dmnl
+	~	Relative mode choice of PT in the beginning of the simulation
+	|
+
+PT Utility Coefficient= INITIAL(
+	Equilibirum PT Utility Coefficient)
+	~	dmnl/($/trip)
+	~	Weight of the Public Transit expenses in the utility of Public Transit
+	|
+
+PT Quality Erosion= 
+	PT Quality/Average Service Life of PT Assets
+	~	dmnl/year
+	~	Rate of erosion of Public Transit quality, reflects reduction of service \
+		level due to the wearing out of equipment and obsolescence of capabilities
+	|
+
+Desired Investment in PT=
+	MAX(0,(Desired PT Quality-PT Quality)/Minimum Time to Allocate the Investment + PT Quality Erosion\
+		)/Investment Eficiency
+	~	$/year
+	~	The desired investment in Public Transit quality to compensate for the \
+		erosion and bring the Public Transit quality to the desired level
+	|
+
+Minimum Time to Allocate the Investment=
+	1
+	~	year
+	~	Time required to alocate the money to the investment in Public Transit \
+		quality
+	|
+
+Utility of PT=
+	PT Travel Costs*PT Utility Coefficient
+	~	dmnl
+	~	Total utility of Public Transit for commuters
+	|
+
+Relative VMT=
+	Total Vehicle Miles Traveled/Reference VMT
+	~	dmnl
+	~	Total vehicle miles traveled by all vehicles in the area relative to the \
+		equilibrium value
+	|
+
+PT Maintenance=
+	Investment in PT*Investment Eficiency
+	~	dmnl/year
+	~	The rate of improvement of Public Transit quality.  Reflects maintenance \
+		of equipment and expansion of routes.
+	|
+
+Max Revenue Reinvestment=
+	Yearly Revenue*Max Reinvestment Fraction
+	~	$/year
+	~	Maximum possible reinvestment in Public Transit quality as determined by \
+		the ridership revenue
+	|
+
+Max Reinvestment Fraction=
+	0.25
+	~	dmnl
+	~	Maximum fraction of total revenue that can be allotted to the maintenance \
+		of capabilities
+	|
+
+Maximum Goverment Subsidy=
+	1e+07
+	~	$/year
+	~	Maximum possible level of public subsidy to the improvement of Public \
+		Transit in the area
+	|
+
+Free Flow Speed of Traffic=
+	30
+	~	miles/hour
+	~	Average speed of the traffic flow in the area if the roads are not \
+		congested
+	|
+
+Traffic Speed=
+	Free Flow Speed of Traffic*Effect of Increased Driving on Speed
+	~	mile/hour
+	~	Average speed of the traffic flow in the area
+	|
+
+Driving Time=
+	Driving Demand per Person/Traffic Speed
+	~	hour/(day*people)
+	~	Actual duration of the average commute
+	|
+
+Change in Average Driving Time=
+	(Driving Time-Average Driving Time)/Time to Average Driving Time
+	~	hour/(year*day*people)
+	~	Adjustment in the perceived duration of the commute in the area
+	|
+
+Days in Year=
+	350
+	~	days/year
+	~	Number of days in a year
+	|
+
+Desired PT Quality=
+	1
+	~	dmnl
+	~	Desired quality of Public Transit, reflects full level of service in the \
+		area
+	|
+
+Relative Weight of Time Costs=
+	-0.02
+	~	dmnl/($/(day*person))
+	~	Weight of the value of time in the utility of driving
+	|
+
+Elasticity of Traffic Speed to Traffic=
+	-2
+	~	dmnl [-2,-0.1]
+	~	Elasticity of the traffic flow speed to the number of miles driven by \
+		cars, the effect of congestion on speed
+	|
+
+Elasticity of PT Travel Costs to Quality=
+	-0.8
+	~	dmnl
+	~	Elasticity of costs incurred by Public Transit passengers to the level of \
+		PT quality in the area
+	|
+
+Investment Eficiency=
+	1e-08
+	~	dmnl/$
+	~	Efficiency of $ investment in Public Transit maintenance.  Reflects how \
+		much $ are spent to increase PT quality by 1 unit
+	|
+
+Average Driving Time= INTEG (
+	Change in Average Driving Time,
+		Reference Average Driving Time)
+	~	hour/(day*person)
+	~	The average duration of commute in the area
+	|
+
+Commuting Population in the Catchment Area=
+	1e+06
+	~	people
+	~	Total population of commuters in the area
+	|
+
+Driving Mode Share=
+	EXP(Utility of Driving*Ride Choice Logit Scaling)/(EXP(Utility of PT*Ride Choice Logit Scaling\
+		)+EXP(Utility of Driving*Ride Choice Logit Scaling))
+	~	dmnl
+	~	Mode share of Driving
+	|
+
+PT Travel Costs=
+	(Relative PT Quality^Elasticity of PT Travel Costs to Quality)*Reference PT Travel Costs
+	~	$/trip
+	~	Travel expenses of a commuter who chooses Public Transit
+	|
+
+Reference Average Driving Time=
+	1
+	~	hours/day/person [0.1,2,0.1]
+	~	Reference duration of an average commute in the area
+	|
+
+Reference PT Travel Costs=
+	20
+	~	$/trip
+	~	Reference level of travel expenses for a commuter on Public Transit
+	|
+
+Relative PT Quality=
+	PT Quality/Desired PT Quality
+	~	dmnl
+	~	Current quality of Public Transit relative to the desired quality
+	|
+
+Average Service Life of PT Assets=
+	1
+	~	years [0.1,5]
+	~	Average service life of the equipment and relevance of routes and other \
+		attributes that determine quality of service for commnuters
+	|
+
+Ride Choice Logit Scaling=
+	0.75
+	~	dmnl [0.1,?]
+	~	Scaling parameter of the binomial logit choice model, sensitivity to the \
+		difference in utility values
+	|
+
+SW AVs=
+	0
+	~	dmnl [0,1,1]
+	~	0 = No Automated Vehicles, 1 = Automated Vehicles
+	|
+
+SW Pooling=
+	0
+	~	dmnl [0,1,1]
+	~	0 = No Pooling, 1 = Pooling
+	|
+
+Time to Average Driving Time=
+	1
+	~	year
+	~	Time to adjust the average commuters' perception of the congestion level \
+		and everyday driving habits in the area, as reflected in the average \
+		duration of commute
+	|
+
+Yearly Revenue=
+	Ridership Revenue*Days in Year
+	~	$/year
+	~	Yearly revenue of Public Transit generated from ridership
+	|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 30
+	~	year
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 0
+	~	year
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 
+        TIME STEP
+	~	year [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 0.1
+	~	year [0,?]
+	~	The time step for the simulation.
+	|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*View 1
+$192-192-192,0,Arial|12|B|0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|120,120,70,0
+1,1,160,14,1,0,0,0,0,192,0,-1--1--1,,1|(589,534)|
+12,2,82642688,338,560,239,214,3,188,0,0,1,0,0,0
+Utility
+10,3,PT Quality,1040,219,61,33,3,131,0,0,0,0,0,0
+12,4,48,1343,224,10,8,0,3,0,0,-1,0,0,0
+1,5,7,4,4,0,0,22,0,0,0,-1--1--1,,1|(1287,222)|
+1,6,7,3,100,0,0,22,0,0,0,-1--1--1,,1|(1165,222)|
+11,7,48,1235,222,6,8,34,3,0,0,1,0,0,0
+10,8,PT Quality Erosion,1235,254,53,24,40,3,0,0,-1,0,0,0
+12,9,48,756,225,10,8,0,3,0,0,-1,0,0,0
+1,10,12,3,4,0,0,22,0,0,0,-1--1--1,,1|(928,225)|
+1,11,12,9,100,0,0,22,0,0,0,-1--1--1,,1|(816,225)|
+11,12,48,872,225,6,8,34,3,0,0,1,0,0,0
+10,13,PT Maintenance,872,260,64,24,40,131,0,0,-1,0,0,0
+10,14,Investment in PT,689,448,67,24,8,3,0,0,0,0,0,0
+10,15,Government Subsidy,832,553,62,24,8,3,0,0,0,0,0,0
+1,16,3,34,1,0,0,0,0,192,0,-1--1--1,,1|(1113,270)|
+1,17,15,14,1,0,0,0,0,192,0,-1--1--1,,1|(741,526)|
+1,18,14,13,1,0,0,0,0,192,0,-1--1--1,,1|(728,363)|
+10,19,Utility of PT,1314,557,58,13,8,3,0,0,0,0,0,0
+10,20,Driving Mode Share,1258,716,66,24,8,3,0,0,0,0,0,0
+1,21,19,20,1,0,0,0,0,192,0,-1--1--1,,1|(1310,615)|
+10,22,Utility of Driving,1652,601,42,24,8,3,0,0,0,0,0,0
+1,23,22,20,1,0,0,0,0,192,0,-1--1--1,,1|(1479,621)|
+1,24,3,7,1,0,0,0,0,192,0,-1--1--1,,1|(1125,161)|
+10,25,Average Service Life of PT Assets,1315,120,112,36,8,131,0,0,0,0,0,0
+1,26,25,7,1,0,0,0,0,192,0,-1--1--1,,1|(1237,170)|
+10,27,Desired PT Quality,1118,414,55,24,8,131,0,0,0,0,0,0
+10,28,Ride Choice Logit Scaling,1408,599,65,24,8,3,0,0,0,0,0,0
+10,29,Investment Eficiency,926,357,55,24,8,3,0,0,0,0,0,0
+1,30,29,13,1,0,0,0,0,192,0,-1--1--1,,1|(903,322)|
+10,31,Reference PT Quality,962,110,68,24,8,3,0,0,0,0,0,0
+1,32,31,3,0,0,0,0,0,192,1,-1--1--1,,1|(993,154)|
+1,33,27,3,1,0,0,0,0,192,1,-1--1--1,,1|(1088,309)|
+10,34,Relative PT Quality,1152,328,57,24,8,3,0,0,0,0,0,0
+1,35,34,38,1,0,0,0,0,192,0,-1--1--1,,1|(1235,365)|
+10,36,Ridership Revenue,883,820,48,24,8,3,0,0,0,0,0,0
+10,37,PT Fare,828,872,39,13,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|12||255-128-0
+10,38,PT Travel Costs,1275,425,48,24,8,3,0,0,0,0,0,0
+1,39,38,19,1,0,0,0,0,192,0,-1--1--1,,1|(1305,480)|
+10,40,Relative Weight of Time Costs,1775,442,91,24,8,3,0,0,0,0,0,0
+1,41,40,22,1,0,0,0,0,192,0,-1--1--1,,1|(1750,492)|
+10,42,Reference PT Travel Costs,1497,315,68,24,8,3,0,0,0,0,0,0
+10,43,SW AVs,87,1123,40,13,8,3,0,2,-1,0,0,0,0-0-0,0-0-0,|12||255-0-255
+10,44,SW Pooling,99,923,57,13,8,3,0,2,-1,0,0,0,0-0-0,0-0-0,|12||255-0-255
+10,45,Elasticity of PT Travel Costs to Quality,1392,276,77,36,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|12|B|0-0-255
+1,46,45,38,0,0,0,0,0,192,0,-1--1--1,,1|(1332,351)|
+10,47,Value of Driving Time,1645,493,63,24,8,3,0,0,-1,0,0,0
+1,48,47,22,1,0,0,0,0,192,0,-1--1--1,,1|(1653,530)|
+10,49,Effect of Increased Driving on Speed,1833,1079,94,24,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|12|B|0-128-0
+10,50,Traffic Speed,1990,974,67,12,8,3,0,0,0,0,0,0
+1,51,49,50,1,0,0,0,0,192,0,-1--1--1,,1|(1958,1022)|
+10,52,Average Driving Time,1841,718,62,31,3,131,0,0,0,0,0,0
+10,53,Free Flow Speed of Traffic,2183,995,83,24,8,3,0,0,-1,0,0,0
+1,54,53,50,0,0,0,0,0,192,0,-1--1--1,,1|(2085,984)|
+10,55,Driving Demand per Person,1061,994,79,24,8,3,0,0,0,0,0,0
+10,56,Commuting Population in the Catchment Area,1033,909,84,36,8,3,0,0,0,0,0,0
+1,57,56,36,0,0,0,0,0,192,0,-1--1--1,,1|(954,862)|
+1,58,37,36,0,0,0,0,0,192,0,-1--1--1,,1|(843,856)|
+10,59,Yearly Revenue,721,669,44,24,8,3,0,0,0,0,0,0
+1,60,36,59,1,0,0,0,0,192,0,-1--1--1,,1|(779,757)|
+10,61,Days in Year,678,750,63,12,8,3,1,0,0,0,0,0
+1,62,61,59,0,1,0,0,0,192,0,-1--1--1,,1|(692,721)|
+10,63,Total Driving Demand,1250,907,64,24,8,3,0,0,0,0,0,0
+1,64,20,63,1,0,0,0,0,192,0,-1--1--1,,1|(1238,785)|
+10,65,Average Vehicle Occupancy,990,1104,80,24,8,3,0,0,0,0,0,0
+10,66,Total Vehicle Miles Traveled,1343,1009,72,24,8,3,0,0,0,0,0,0
+1,67,63,66,1,0,0,0,0,192,0,-1--1--1,,1|(1281,954)|
+10,68,Relative VMT,1494,1081,66,12,8,3,0,0,0,0,0,0
+1,69,66,68,1,0,0,0,0,192,0,-1--1--1,,1|(1393,1048)|
+10,70,Elasticity of Traffic Speed to Traffic,2117,1114,94,24,8,3,0,2,-1,0,0,0,0-0-0,0-0-0,|12|B|0-0-255
+1,71,52,22,1,0,0,0,0,192,0,-1--1--1,,1|(1758,661)|
+12,72,48,2110,713,10,8,0,3,0,0,-1,0,0,0
+1,73,75,52,4,0,0,22,0,0,0,-1--1--1,,1|(1963,710)|
+1,74,75,72,100,0,0,22,0,0,0,-1--1--1,,1|(2068,710)|
+11,75,48,2030,710,6,8,34,3,0,0,1,0,0,0
+10,76,Change in Average Driving Time,2030,759,94,24,40,131,0,0,-1,0,0,0
+10,77,Driving Time,2042,874,63,12,8,3,0,0,0,0,0,0
+1,78,50,77,1,0,0,0,0,192,0,-1--1--1,,1|(2022,935)|
+1,79,77,76,1,0,0,0,0,192,0,-1--1--1,,1|(2049,825)|
+1,80,52,75,1,0,0,0,0,192,0,-1--1--1,,1|(1939,651)|
+10,81,Time to Average Driving Time,2096,646,81,24,8,3,0,0,0,0,0,0
+1,82,81,75,1,0,0,0,0,192,0,-1--1--1,,1|(2066,676)|
+10,83,Driving Demand per Person,2387,894,85,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,84,83,77,1,0,0,0,0,192,0,-1--1--1,,1|(2168,901)|
+12,85,8654310,1929,194,232,201,3,188,0,0,1,0,0,0
+PT_Quality
+12,86,6361204,2399,193,232,201,3,188,0,0,2,0,0,0
+Average Driving Time,Graph
+10,87,Reference Average Driving Time,1660,814,79,36,8,3,0,0,0,0,0,0
+1,88,87,52,0,0,0,0,0,192,1,-1--1--1,,1|(1748,766)|
+10,89,Maximum Goverment Subsidy,1081,680,56,36,8,3,0,0,0,0,0,0
+10,90,Reference VMT,1551,974,51,24,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|12||255-128-0
+1,91,90,68,0,0,0,0,0,192,0,-1--1--1,,1|(1522,1027)|
+1,92,28,20,0,0,0,0,0,192,0,-1--1--1,,1|(1338,653)|
+1,93,42,38,0,0,0,0,0,192,0,-1--1--1,,1|(1392,366)|
+10,94,Max Reinvestment Fraction,881,705,92,24,8,3,0,0,0,0,0,0
+10,95,Desired Investment in PT,998,480,84,24,8,3,0,0,0,0,0,0
+1,96,27,95,0,0,0,0,0,192,0,-1--1--1,,1|(1064,443)|
+1,97,3,95,1,0,0,0,0,192,0,-1--1--1,,1|(1042,353)|
+1,98,27,34,0,0,0,0,0,192,0,-1--1--1,,1|(1131,377)|
+10,99,Max Revenue Reinvestment,685,586,68,24,8,3,0,0,0,0,0,0
+1,100,94,99,0,0,0,0,0,192,0,-1--1--1,,1|(788,649)|
+1,101,59,99,0,0,0,0,0,192,0,-1--1--1,,1|(705,633)|
+1,102,95,15,1,0,0,0,0,192,0,-1--1--1,,1|(919,534)|
+1,103,99,15,0,0,0,0,0,192,0,-1--1--1,,1|(754,570)|
+1,104,89,116,0,0,0,0,0,192,0,-1--1--1,,1|(1042,639)|
+1,105,99,14,1,0,0,0,0,192,0,-1--1--1,,1|(677,518)|
+1,106,95,14,1,0,0,0,0,192,0,-1--1--1,,1|(833,491)|
+1,107,29,95,0,0,0,0,0,192,0,-1--1--1,,1|(958,412)|
+1,108,8,95,1,0,0,0,0,192,0,-1--1--1,,1|(1174,435)|
+12,109,15862482,2411,598,232,201,3,188,0,0,1,0,0,0
+PT_Ridership_Share
+10,110,PT Utility Coefficient,1380,483,54,24,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|12||255-128-0
+1,111,110,19,0,0,0,0,0,192,0,-1--1--1,,1|(1346,520)|
+10,112,Minimum Time to Allocate the Investment,837,421,85,36,8,3,0,0,0,0,0,0
+1,113,112,95,0,0,0,0,0,192,0,-1--1--1,,1|(920,451)|
+1,114,43,132,0,0,0,0,0,192,0,-1--1--1,,1|(154,1114)|
+1,115,44,143,0,0,0,0,0,192,0,-1--1--1,,1|(176,899)|
+10,116,Authorized Government Subsidy,994,589,62,36,8,3,0,0,0,0,0,0
+1,117,34,116,1,0,0,0,0,192,0,-1--1--1,,1|(1183,499)|
+1,118,116,15,1,0,0,0,0,192,0,-1--1--1,,1|(880,590)|
+10,119,Maximum Effect of Pooling on Average Vehicle Occupancy,93,815,97,36,8,3,0,0,0,0,0,0
+1,120,119,143,0,0,0,0,0,192,0,-1--1--1,,1|(200,832)|
+10,121,Maximum Effect of Automation on the Value of Time,85,1009,93,36,8,3,0,0,0,0,0,0
+1,122,121,132,0,0,0,0,0,192,0,-1--1--1,,1|(190,1048)|
+12,123,14879854,409,161,312,186,3,188,0,0,1,0,0,0
+Flows
+10,124,Equilibrium PT Fare,808,930,62,24,8,2,17,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,125,124,37,0,17,0,0,0,64,1,-1--1--1,,1|(817,902)|
+10,126,Equilibirum PT Utility Coefficient,1463,420,92,24,8,2,17,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,127,126,110,0,17,0,0,0,64,1,-1--1--1,,1|(1427,447)|
+10,128,Equilibrium Reference VMT,1494,902,83,24,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12|B|128-128-128
+1,129,128,90,0,1,0,0,0,192,1,-1--1--1,,1|(1518,932)|
+1,130,70,49,0,0,0,0,0,64,0,-1--1--1,,1|(1981,1097)|
+1,131,68,49,1,0,0,0,0,64,0,-1--1--1,,1|(1644,1101)|
+10,132,Effect of Automation on the Value of Driving Time,309,1095,114,36,8,3,0,0,0,0,0,0
+10,133,Reference Value Of Driving Time,1488,548,87,24,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12|B|128-128-128
+1,134,133,47,0,1,0,0,0,192,0,-1--1--1,,1|(1562,521)|
+1,135,56,63,0,0,0,0,0,192,0,-1--1--1,,1|(1144,908)|
+1,136,55,63,0,0,0,0,0,192,0,-1--1--1,,1|(1148,953)|
+10,137,Elasticity of Driving Demand to Automation,807,982,114,24,8,3,0,2,-1,0,0,0,0-0-0,0-0-0,|12|B|0-0-255
+1,138,137,55,0,0,0,0,0,192,0,-1--1--1,,1|(944,988)|
+10,139,Effect of Automation on the Value of Driving Time,792,1045,114,36,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,140,139,55,0,0,0,0,0,192,0,-1--1--1,,1|(937,1017)|
+10,141,Reference Driving Demand per Person,782,1107,105,24,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12|B|128-128-128
+1,142,141,55,0,1,0,0,0,192,0,-1--1--1,,1|(914,1053)|
+10,143,Effect of Pooling on Average Vehicle Occupancy,324,854,99,36,8,3,0,0,0,0,0,0
+10,144,Effect of Automation on the Value of Driving Time,1605,380,114,36,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,145,144,47,0,0,0,0,0,192,0,-1--1--1,,1|(1624,435)|
+10,146,Effect of Pooling on Average Vehicle Occupancy,818,1160,105,36,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,147,146,65,0,0,0,0,0,192,0,-1--1--1,,1|(912,1129)|
+10,148,Reference Vehicle Occupancy,987,1175,63,36,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12|B|128-128-128
+1,149,148,65,0,1,0,0,0,192,0,-1--1--1,,1|(988,1140)|
+10,150,Effects Start Year,432,953,63,24,8,3,0,0,0,0,0,0
+10,151,Full Effects Year,429,1015,57,24,8,3,0,0,0,0,0,0
+1,152,150,143,0,0,0,0,0,192,0,-1--1--1,,1|(389,914)|
+1,153,150,132,0,0,0,0,0,192,0,-1--1--1,,1|(380,1012)|
+1,154,151,143,0,0,0,0,0,192,0,-1--1--1,,1|(384,946)|
+1,155,151,132,0,0,0,0,0,192,0,-1--1--1,,1|(383,1045)|
+10,156,Relative Weight of Operating Cost per Rider,1852,507,95,36,8,3,0,0,0,0,0,0
+10,157,Operating Cost per Rider,1871,592,76,24,8,3,0,0,0,0,0,0
+1,158,156,22,0,0,0,0,0,192,0,-1--1--1,,1|(1741,559)|
+1,159,157,22,0,0,0,0,0,192,0,-1--1--1,,1|(1751,596)|
+10,160,VMT Tax Reinvestment,527,828,68,24,8,3,0,0,0,0,0,0
+10,161,SW VMT Tax,615,1141,65,12,8,3,0,2,-1,0,0,0,0-0-0,0-0-0,|12|B|255-0-255
+1,162,161,165,0,0,0,0,0,192,0,-1--1--1,,1|(564,1111)|
+10,163,Full VMT Tax,609,1026,66,12,8,3,0,0,0,0,0,0
+1,164,163,165,0,0,0,0,0,192,0,-1--1--1,,1|(561,1046)|
+10,165,VMT Tax,500,1074,44,13,8,3,0,0,0,0,0,0
+1,166,150,165,0,0,0,0,0,64,0,-1--1--1,,1|(465,1012)|
+1,167,151,165,0,0,0,0,0,64,0,-1--1--1,,1|(465,1045)|
+10,168,VMT Tax,2079,537,56,13,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,169,168,157,0,0,0,0,0,192,0,-1--1--1,,1|(1995,558)|
+10,170,Vehicle Operating Cost,2094,583,82,24,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12|B|128-128-128
+1,171,170,157,0,1,0,0,0,192,0,-1--1--1,,1|(1986,586)|
+10,172,Total Vehicle Miles Traveled,713,848,79,24,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,173,172,160,0,1,0,0,0,192,0,-1--1--1,,1|(621,838)|
+1,174,165,160,0,0,0,0,0,192,0,-1--1--1,,1|(511,963)|
+1,175,61,160,0,1,0,0,0,192,0,-1--1--1,,1|(620,779)|
+10,176,Cents in $,712,797,50,13,8,3,1,0,0,0,0,0
+1,177,176,160,0,1,0,0,0,192,0,-1--1--1,,1|(635,809)|
+10,178,Reinvestment Fraction of VMT Tax,644,910,102,24,8,3,0,0,0,0,0,0
+1,179,178,160,0,0,0,0,0,192,0,-1--1--1,,1|(591,872)|
+10,180,Effect of Occupancy on VMT,1206,1079,98,24,8,3,0,0,0,0,0,0
+1,181,65,180,0,0,0,0,0,192,0,-1--1--1,,1|(1082,1093)|
+1,182,180,66,1,0,0,0,0,192,0,-1--1--1,,1|(1271,1049)|
+10,183,Elasticity of VMT to Occupancy,1164,1152,84,24,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|12||0-0-255
+1,184,183,180,0,0,0,0,0,192,0,-1--1--1,,1|(1180,1121)|
+10,185,Elasticity of Operating Cost to Occupancy,2014,433,89,36,8,3,0,2,-1,0,0,0,0-0-0,0-0-0,|12|B|0-0-255
+1,186,185,157,0,0,0,0,0,192,0,-1--1--1,,1|(1941,513)|
+10,187,Average Vehicle Occupancy,2091,494,86,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,188,187,157,0,0,0,0,0,192,0,-1--1--1,,1|(1987,540)|
+10,189,PT Mode Share,1097,826,45,24,8,3,0,0,0,0,0,0
+1,190,20,189,1,0,0,0,0,192,0,-1--1--1,,1|(1195,779)|
+1,191,189,36,1,0,0,0,0,192,0,-1--1--1,,1|(1049,836)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Equilibrium values
+$192-192-192,0,Arial|12|B|0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|120,120,70,0
+10,1,Equilibrium PT Fare,393,321,73,24,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|12||0-0-255
+10,2,Days in Year,221,201,44,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,3,2,1,0,0,0,0,0,64,1,-1--1--1,,1|(300,256)|
+10,4,Investment Eficiency,378,578,61,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,5,4,1,0,0,0,0,0,64,1,-1--1--1,,1|(384,456)|
+10,6,Max Reinvestment Fraction,188,542,98,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,7,6,1,0,0,0,0,0,64,1,-1--1--1,,1|(285,436)|
+10,8,Equilibirum PT Utility Coefficient,1440,443,85,24,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|12||0-0-255
+10,9,Ride Choice Logit Scaling,1386,596,71,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,10,9,8,0,0,0,0,0,64,1,-1--1--1,,1|(1410,526)|
+10,11,Equilibrium PT Travel Costs,1616,251,73,24,8,3,0,0,0,0,0,0
+10,12,Equilibrium PT Quality Erosion Rate,948,217,103,24,8,3,0,0,0,0,0,0
+10,13,Desired PT Quality,1884,182,61,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12|B|128-128-128
+1,14,13,11,0,0,0,0,0,64,1,-1--1--1,,1|(1762,212)|
+10,15,Elasticity of PT Travel Costs to Quality,1955,326,82,36,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12|B|128-128-128
+1,16,15,11,0,0,0,0,0,64,1,-1--1--1,,1|(1787,289)|
+10,17,Reference PT Travel Costs,1765,416,89,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,18,17,11,0,0,0,0,0,64,1,-1--1--1,,1|(1695,338)|
+10,19,Average Service Life of PT Assets,662,51,92,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12|B|128-128-128
+1,20,19,12,0,0,0,0,0,64,1,-1--1--1,,1|(798,130)|
+10,21,Equilibrium Reference VMT,2083,855,77,24,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|12||0-0-255
+10,22,Free Flow Speed of Traffic,2264,929,89,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12|B|128-128-128
+1,23,22,21,0,0,0,0,0,64,1,-1--1--1,,1|(2179,894)|
+10,24,Elasticity of Traffic Speed to Traffic,2196,745,88,36,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,25,24,21,0,0,0,0,0,64,1,-1--1--1,,1|(2138,801)|
+10,26,Equilibrium Utility of Driving,1609,581,87,24,8,3,0,0,0,0,0,0
+1,27,11,8,0,0,0,0,0,192,1,-1--1--1,,1|(1532,341)|
+1,28,26,8,0,0,0,0,0,192,1,-1--1--1,,1|(1529,516)|
+10,29,Equilibrium Mode Share of PT,740,771,86,24,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|12|B|255-128-0
+1,30,29,1,0,0,0,0,0,192,1,-1--1--1,,1|(570,551)|
+1,31,12,1,0,0,0,0,0,192,1,-1--1--1,,1|(662,270)|
+10,32,Equilibrium Authorized Government Subsidy,765,419,105,36,8,3,0,0,0,0,0,0
+10,33,Equilibrium Relative PT Quality,1058,379,95,24,8,3,0,0,-1,0,0,0
+1,34,33,32,0,0,0,0,0,64,1,-1--1--1,,1|(923,396)|
+10,35,Maximum Goverment Subsidy,842,547,56,36,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12|B|128-128-128
+1,36,35,32,0,0,0,0,0,64,1,-1--1--1,,1|(807,488)|
+1,37,32,1,0,0,0,0,0,192,1,-1--1--1,,1|(569,367)|
+10,38,Reference Vehicle Occupancy,2041,1145,90,24,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|12|B|255-128-0
+10,39,Equilibrium Driving Demand,1626,1069,79,24,8,3,0,0,0,0,0,0
+1,40,29,39,0,0,0,0,0,192,1,-1--1--1,,1|(1175,917)|
+10,41,Equilibrium Driving VMT,1870,1046,61,24,8,3,0,0,0,0,0,0
+1,42,41,21,0,0,0,0,0,192,1,-1--1--1,,1|(1970,955)|
+1,43,38,41,0,0,0,0,0,192,1,-1--1--1,,1|(1961,1098)|
+1,44,39,41,0,0,0,0,0,192,1,-1--1--1,,1|(1750,1057)|
+10,45,Desired PT Quality,1096,500,61,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,46,45,33,0,0,0,0,0,64,1,-1--1--1,,1|(1079,446)|
+10,47,Equilibrium PT Quality,1313,160,73,24,8,3,0,2,-1,0,0,0,0-0-0,0-0-0,|12||255-128-0
+1,48,47,33,0,0,0,0,0,64,1,-1--1--1,,1|(1190,264)|
+10,49,Equilibrium Perceived Travel Time,1888,695,83,36,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|12||255-128-0
+1,50,49,21,0,0,0,0,0,192,1,-1--1--1,,1|(1986,776)|
+1,51,49,26,0,0,0,0,0,192,1,-1--1--1,,1|(1742,636)|
+10,52,Relative Weight of Time Costs,1649,722,87,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,53,52,26,0,0,0,0,0,64,1,-1--1--1,,1|(1631,658)|
+1,54,47,12,0,0,0,0,0,192,1,-1--1--1,,1|(1152,184)|
+1,55,47,11,0,0,0,0,0,192,1,-1--1--1,,1|(1457,202)|
+1,56,29,8,0,0,0,0,0,192,1,-1--1--1,,1|(1083,609)|
+10,57,Reference Value Of Driving Time,1406,719,81,24,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|12|B|255-128-0
+1,58,57,26,0,0,0,0,0,192,1,-1--1--1,,1|(1501,653)|
+10,59,Commuting Population in the Catchment Area,144,431,86,36,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12|B|128-128-128
+1,60,59,1,0,0,0,0,0,192,1,-1--1--1,,1|(275,372)|
+10,61,Reference Driving Demand per Person,1761,880,99,36,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|12|B|255-128-0
+1,62,61,21,0,0,0,0,0,192,1,-1--1--1,,1|(1926,867)|
+10,63,Commuting Population in the Catchment Area,1540,934,86,36,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12|B|128-128-128
+1,64,61,39,0,0,0,0,0,192,1,-1--1--1,,1|(1693,974)|
+1,65,63,39,0,0,0,0,0,192,1,-1--1--1,,1|(1582,1001)|
+10,66,Relative Weight of Operating Cost per Rider,1826,523,97,36,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12|B|128-128-128
+1,67,66,26,0,0,0,0,0,192,1,-1--1--1,,1|(1719,550)|
+10,68,Vehicle Operating Cost,1895,591,95,36,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|12|B|255-128-0
+1,69,68,26,0,0,0,0,0,192,1,-1--1--1,,1|(1754,586)|
+///---\\\
+:GRAPH Utility
+:TITLE Utility
+:SCALE
+:VAR Utility of Driving
+:VAR Utility of PT
+
+:GRAPH PT_Quality
+:TITLE PT Quality
+:SCALE
+:VAR PT Quality
+:Y-MIN 0
+:Y-MAX 1
+
+:GRAPH PT_Ridership_Share
+:TITLE PT Ridership Share
+:SCALE
+:VAR PT Mode Share
+:Y-MIN 0
+:Y-MAX 1
+
+:TABLE Flows
+:TITLE Flows
+:PRETTYNUM
+:X-MIN 300
+:X-MAX 300
+:FIRST-CELLWIDTH 30
+:CELLWIDTH 14
+:FONT Arial|12||0-0-0
+:VAR PT Quality
+:VAR Perceived Travel Time
+:COMLINE -------
+:VAR PT Qualiy Net Flow
+:VAR Change in Perceived Travel Time
+:COMLINE -------
+:VAR Initial PT Quality Level
+:VAR Reference Driving Travel Time
+:L<%^E!@
+1:current.vdf
+9:current
+22:day,days
+22:hour,hours
+22:mile,miles
+22:person,persons,people
+22:year,years
+11:unstable equilibirium.VOC
+12:unstable equilibirium.VPD
+15:0,0,0,0,0,0
+19:70,0
+27:0,
+34:0,
+4:Time
+5:Max Revenue Reinvestment
+35:Date
+36:YYYY-MM-DD
+37:2000
+38:1
+39:1
+40:0
+41:0
+42:1
+24:0
+25:30
+26:30
+57:1
+54:0
+55:0
+59:0
+56:0
+58:0
+44:65001
+46:0
+45:1
+49:0
+50:0
+51:
+52:
+53:
+43:graph (avs, pooling, 035) v2.tab
+47:Current
+48:
+60:graph (pooling sensitivity, 035) v2
+61:65001
+62:1
+63:0
+64:0
+65:1
+66:0
+67:0
+68:0
+69:0
+70:1
